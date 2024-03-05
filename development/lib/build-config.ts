@@ -1,7 +1,12 @@
-const fs = require('fs');
-const { AssertionError } = require('assert');
-const path = require('path');
-const {
+import fs from 'fs';
+import AssertionError from 'assert';
+import path from 'path';
+import yaml from 'js-yaml';
+import uniq from 'lodash/uniq';
+import uniqWith from 'lodash/uniqWith';
+import { Infer, Struct } from 'superstruct';
+
+import {
   object,
   string,
   record,
@@ -17,24 +22,15 @@ const {
   nullable,
   never,
   literal,
-} = require('superstruct');
-const yaml = require('js-yaml');
-const { uniqWith } = require('lodash');
+} from 'superstruct';
 
+import { Unique, AssetStruct } from './build-config.type';
 const BUILDS_YML_PATH = path.resolve('./builds.yml');
 
-/**
- * @type {import('superstruct').Infer<typeof BuildTypesStruct> | null}
- */
 let cachedBuildTypes = null;
 
-/**
- * Ensures that the array item contains only elements that are distinct from each other
- *
- * @template {Struct<any>} Element
- * @type {import('./build-type').Unique<Element>}
- */
-const unique = (struct, eq) =>
+const unique: Unique<any> = (struct, eq) =>
+  // Refined type using superstruct
   refine(struct, 'unique', (value) => {
     if (uniqWith(value, eq).length === value.length) {
       return true;
@@ -43,18 +39,23 @@ const unique = (struct, eq) =>
   });
 
 const EnvDefinitionStruct = coerce(
+  // Object type using Record and unknown
   object({ key: string(), value: unknown() }),
+  // Refine function to further validate
   refine(record(string(), any()), 'Env variable declaration', (value) => {
     if (Object.keys(value).length !== 1) {
       return 'Declaration should have only one property, the name';
     }
     return true;
   }),
+  // Coerce function to extract key and value
   (value) => ({ key: Object.keys(value)[0], value: Object.values(value)[0] }),
 );
 
 const EnvArrayStruct = unique(
+  // Array type using union
   array(union([string(), EnvDefinitionStruct])),
+  // Equality function for unique
   (a, b) => {
     const keyA = typeof a === 'string' ? a : a.key;
     const keyB = typeof b === 'string' ? b : b.key;
@@ -70,18 +71,27 @@ const BuildTypeStruct = object({
   buildNameOverride: union([string(), literal(false)]),
 });
 
-const CopyAssetStruct = object({ src: string(), dest: string() });
 const ExclusiveIncludeAssetStruct = coerce(
   object({ exclusiveInclude: string() }),
   string(),
   (exclusiveInclude) => ({ exclusiveInclude }),
 );
-const AssetStruct = union([CopyAssetStruct, ExclusiveIncludeAssetStruct]);
+
+interface CopyAssetStruct {
+  src: string;
+  dest: string;
+}
+
+interface ExclusiveIncludeAssetStruct {
+  exclusiveInclude: string;
+}
+
+type AssetStruct = CopyAssetStruct & ExclusiveIncludeAssetStruct;
 
 const FeatureStruct = object({
   env: optional(EnvArrayStruct),
   // TODO(ritave): Check if the paths exist
-  assets: optional(array(AssetStruct)),
+  assets: optional(AssetStruct),
 });
 
 const FeaturesStruct = refine(
