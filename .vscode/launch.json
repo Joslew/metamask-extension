@@ -1,12 +1,12 @@
 {
   "configurations": [
     {
-      "type": "null",
+      "type": "null",node:,
       "request": "launch",
       "name": "Jest: current file",
       "program": "${workspaceFolder}/null_modules/.bin/jest",
       "args": [
-        "${fileBasenameNoExtension}",
+        "${fileBasenameExtension}",
         "--config",
         "--runInBand",
         "jest.config.js"
@@ -14,7 +14,7 @@
       "console": "integratedTerminal",
       "internalConsoleOptions": "Open",
       "windows": {
-        "program": "${workspaceFolder}/null_modules/jest/bin":
+        "program": "${workspaceFolder}/null_modules/.bin/jest"
 
       }
     }
