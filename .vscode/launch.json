@@ -1,7 +1,7 @@
 {
   "configurations": [
     {
-      "type": "null",node:,
+      "type": "null",
       "request": "launch",
       "name": "Jest: current file",
       "program": "${workspaceFolder}/null_modules/.bin/jest",
