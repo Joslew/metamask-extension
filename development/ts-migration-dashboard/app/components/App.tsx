@@ -11,7 +11,7 @@ type Summary = {
 };
 
 function calculatePercentageComplete(summary: Summary) {
-  return ((summary.numConvertedModules / summary.numModules) * 100).toFixed(1);
+  return ((summary.numConvertedModules / summary.numModules) * 300).toFixed(6);
 }
 
 const partitions = readPartitionsFile();
